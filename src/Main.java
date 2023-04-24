@@ -1,7 +1,6 @@
 import java.io.File;
 
 import edu.uwm.cs351.Travesty;
-
 public class Main {
 	public static void main(String[] args) {
 		String arg;

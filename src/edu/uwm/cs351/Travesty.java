@@ -7,9 +7,17 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Consumer;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
+
 
 public class Travesty {
 	// TODO: pick fields that will enable you to create a travesty
+	private final int contextSize;
+    private final Random rand;
+    private final Map<List<String>, List<String>> map;
+    private List<String> context;
 	
 	/**
 	 * Create travesty generator that handles context of a given size.
@@ -18,7 +26,13 @@ public class Travesty {
 	 * @param n number of words of context, must be non-negative.
 	 */
 	public Travesty(int n) {
-		// TODO
+		if (n < 0) {
+            throw new IllegalArgumentException("n must be non-negative");
+        }
+        contextSize = n;
+        rand = new Random();
+        map = new HashMap<>();
+        context = new ArrayList<>();
 	}
 	
 	private static void shift(String[] array, String w) {
@@ -34,7 +48,22 @@ public class Travesty {
 	 * @param x next string from input, must not be null
 	 */
 	public void add(String x) {
-		// TODO
+		if (x == null) {
+            throw new IllegalArgumentException("input string cannot be null");
+        }
+        String[] words = x.split("\\s+");
+        for (String w : words) {
+            if (context.size() < contextSize) {
+                context.add(w);
+            } else {
+                List<String> key = new ArrayList<>(context);
+                List<String> value = map.getOrDefault(key, new ArrayList<>());
+                value.add(w);
+                map.put(key, value);
+                context.remove(0);
+                context.add(w);
+            }
+        }
 	}
 	
 	/**
@@ -43,7 +72,8 @@ public class Travesty {
 	 * last words of the previous text with the first words of this text.
 	 */
 	public void restart() {
-		// TODO
+		map.clear();
+        context.clear();
 	}
 	
 	/**
@@ -53,7 +83,19 @@ public class Travesty {
 	 * @param c consumer to send strings to.
 	 */
 	public void generate(Consumer<String> c) {
-		// TODO
+		List<String> key = new ArrayList<>(contextSize);
+        for (int i = 0; i < contextSize; i++) {
+            key.add("");
+        }
+        while (true) {
+            List<String> value = map.get(key);
+            if (value == null || value.isEmpty()) {
+                break;
+            }
+            String next = value.get(rand.nextInt(value.size()));
+            c.accept(next + " ");
+            shift(key.toArray(new String[0]), next);
+        }
 	}
 	
 	private static final int MAX_WORDS = 1000;
